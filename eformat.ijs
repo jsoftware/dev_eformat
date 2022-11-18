@@ -146,11 +146,10 @@ NB. obsolete end.
 NB. obsolete msg
 NB. obsolete }}
 NB. obsolete 
-NB. y is a;w;selfar;ivr;ovr
+NB. y is a;w;ivr;ovr
 NB. Create msg if frames of a & w do not agree
 efckagree_j_ =: {{
-'a w selfar ivr ovr' =. y
-self =. selfar 5!:0  NB. self as an entity
+'a w ivr ovr' =. y
 awr =. a ,&(#@$) w  NB. awr is ranks of noun args
 emsg=.''  NB. init no return
 ir =. ivr <. or =. (ovr<0)} (awr<.ovr) ,: (0 >. awr+ovr)  NB. or= outer cell ranks, limited to arg rank and adjusted for negative rank; ir is rank at which verb is applied
@@ -190,7 +189,17 @@ end.
 emsg
 }}
 
-efdispnsp_j_ =: {{ (": , ' ' , (;:x) {::~ 1&=) y }}
+efdispnsp_j_ =: {{ (": , ' ' , (;:x) {::~ 1&=) y }}  NB. x is (plural;singular) y is count result is 'y word'
+
+NB. [x and] y are args to numeric verb.  Result is string to display if type is nonnumeric
+efcknumericargs =: {{
+> 'y is '&,&.> ('numeric';a:) -.~ efhomo (*@(#@,) * 3!:0) y
+:
+xtype=. 'x is '&,&.> ('numeric';a:) -.~ efhomo (*@(#@,) * 3!:0) x [ ytype=. 'y is '&,&.> ('numeric';a:) -.~ efhomo (*@(#@,) * 3!:0) y
+;:^:_1 xtype ([ , ((<'and') #~ *&#) , ]) ytype
+}}
+
+
  
 NB. y is jerr;curname;jt->ranks;AR of failing self;a[;w][;m]
 NB. if self is a verb, a/w/m are nouns; otherwise a/w are ARs
@@ -269,6 +278,9 @@ end.
 
 NB. Further errors are related to details of primitive execution.
 
+NB. NaN has only one meaning
+if. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return. end.
+
 NB. Go through a tree to find the message code to use
 select. psself
 case. 3 do.
@@ -279,9 +291,10 @@ case. 3 do.
     select. prim
     case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!o.&."b.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
-      if. e=EVLENGTH do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. hdr,emsg return. end. end.
-    case. ;: '@&&.' do.  NB. conjunctions with inherited rank
-      if. (e=EVLENGTH) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. hdr,emsg return. end. end.  NB. check only if inherited rank
+      if. e=EVLENGTH do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.
+      if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end. end.
+     case. ;: '@&&.' do.  NB. conjunctions with inherited rank
+      if. (e=EVLENGTH) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.  NB. check only if inherited rank
     case. ;:'I.' do.
       if. (e=EVLENGTH) do. hdr , ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w return. end.
     fcase. ;:',.' do.  NB. May have agreement error.  No IRS
@@ -348,7 +361,7 @@ case. 3 do.
       hdr , emsg return.
     case. ;:'#' do.
       if. e=EVLENGTH do.
-        if. #emsg=.efckagree a;w;selfar;ivr;ovr do. hdr,emsg return.  NB. agreement error outside the item
+        if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return.  NB. agreement error outside the item
         elseif. ({:$a) ~: (-({:ovr)<.#$w) { $w do.   NB. agreement error inside the item
           if. 1>:#$a do. xmsg =. 'x is a list of ' , ('values value' efdispnsp {:$a) else. xmsg =. 'rows of x contain ' , ('values value' efdispnsp {:$a) , ' each' end.
           if. ({:ovr)>:#$w do. ymsg =. 'y has ' , ('items item' efdispnsp {.$w) else. ymsg =. 'cells of y contain ' , ('items item' efdispnsp ({:ovr){$w) , ' each' end.
@@ -358,8 +371,16 @@ case. 3 do.
       elseif. e=EVINHOMO do. emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
       hdr , emsg return.
-NB. #. xy domain and agreement
-NB. #: xy domain  and agreement
+    case. ;:'#.' do.
+      if. e=EVLENGTH do.
+        if. #emsg=.efckagree a;w;0 0;1 1 do. hdr,emsg return. end.  NB. agreement error outside the item
+      elseif. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
+      end.
+      hdr , emsg return.
+    case. ;:'#:' do.
+      if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
+      end.
+      hdr , emsg return.
 NB. /. /.. agreement
 NB. { x domain and index
 NB. {. {: x domain rank fill
@@ -449,6 +470,9 @@ eformat_j_ 37;63 63;(5!:1<'self');a;<w [ a =. (,2) [ w=.2 3
 self=:#
 eformat_j_ 9;'name';63 63;(5!:1<'self');a;<w [ a =.2 3 [ w=.i. 5
 eformat_j_ 6;'';63 63;(5!:1<'self');a;<w [ a =.(100,:5) [ w=.i. 10 10
+self =: #.
+eformat_j_ 9;'';63 63;(5!:1<'self');a;<w [ a =.1 2 [ w=.3 4 5
+
 )
 
 
