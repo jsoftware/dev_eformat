@@ -318,8 +318,8 @@ case. 3 do.
         if. e=EVDOMAIN do. if. #emsg=. 'x has'&,^:(*@#) a efindexmsg ('' $ a) 9!:23 (0;0$0) do. hdr,emsg return. end. end.  NB. incorrect type of x
         if. e=EVLENGTH do.
           if. 2>#$a do. a =. 0,:a end.  NB. if a has rank <2, make it a table of start/end.
-          if. 2 ~: _2 { $a do. hdr , 'The 2-cells of x must have 2 rows: offset and length' return. end.
-          if. (#$w) < _1 { $a do. hdr , 'The 2-cells of x have ' , ('columns column' efdispnsp _1 { $a) , ' but y has only ' , ('axes axis' efdispnsp #@$w) return. end.
+          if. 2 ~: _2 { $a do. hdr , 'The 2-cells of x must have 2 rows: offsets and lengths' return. end.
+          if. (#$w) < {:!.1 $a do. hdr , 'The 2-cells of x have ' , ('columns column' efdispnsp {:!.1 $a) , ' but y has only ' , ('axes axis' efdispnsp #@$w) return. end.
         elseif. e=EVINDEX do.
           start =. (maxstart =. ({:$a) $ $w) (] + (* <&0))"1 {."2 a
           if. 1 e. epos =. , start ((< 0:) +. >"1) maxstart do.
@@ -336,7 +336,14 @@ case. 3 do.
         elseif. e=EVLENGTH do.
           if. a ~:&# w do. emsg =. 'x has ' , (":#a) , ' items, y has ' , (":#w) end.
         end.
-      case. 3 _3 do.
+      case. 3;_3 do.
+        if. e=EVDOMAIN do.
+          if. #emsg=. 'x has'&,^:(*@#) a efindexmsg (a) 9!:23 (0;0$0) do. hdr,emsg return. end.  NB.nonintegral value
+          if. 1<#$a do. if. #emsg=. 'x has'&,^:(*@#) a efindexmsg (1 {."2 a) 9!:23 (0;0) do. hdr,emsg return. end. end.  NB. first row if any must be nonnegative
+        elseif. e=EVLENGTH do.
+          if. (2=#$a) *. 2~:{:$a do. hdr , 'x must have exactly 2 rows: movement vector and shape' return. end.
+          if. ({:!.1 $a) > #$w do. hdr , 'x has ' , ('columns column' efdispnsp {:!.1 $a) , ' but y has only ' , ('axes axis' efdispnsp #@$w) return. end.
+        end.
       end.
       hdr , emsg return.
     case. ;:'#' do.
