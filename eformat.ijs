@@ -198,8 +198,8 @@ emsg
 efdispnsp_j_ =: {{ (": , ' ' , (;:x) {::~ 1&=) y }}  NB. x is (plural;singular) y is count result is 'y word'
 
 NB. [x and] y are args to numeric verb.  Result is string to display if type is nonnumeric
-efcknumericargs =: {{
-> 'y is '&,&.> ('numeric';a:) -.~ efhomo (*@(#@,) * 3!:0) y
+efcknumericargs_j_ =: {{
+;:^:_1 ('numeric';a:) -.~ efhomo (*@(#@,) * 3!:0) y
 :
 xtype=. 'x is '&,&.> ('numeric';a:) -.~ efhomo (*@(#@,) * 3!:0) x [ ytype=. 'y is '&,&.> ('numeric';a:) -.~ efhomo (*@(#@,) * 3!:0) y
 ;:^:_1 xtype ([ , ((<'and') #~ *&#) , ]) ytype
@@ -296,10 +296,18 @@ case. 3 do.
     NB. Dyads
     ivr =. }. self b. 0  NB. dyad ranks of the verb
     select. prim
-    case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!o."j.H.' do.  NB. atomic dyads and u"v
+    fcase. ;:'o.' do.
+      if. e=EVDOMAIN do. if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;_12 12) do. hdr,emsg return. end. end.
+    case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!"j.H.??.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
       if. e=EVLENGTH do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.
-      if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end. end.
+      if. e=EVDOMAIN do.
+        if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
+        if. prim e. ;:'??.' do.
+          if. #emsg=. w efindexmsg w 9!:23 (0;1) do. hdr,'y must be a positive integer' return. end.
+          if. #emsg=. a efindexmsg a 9!:23 (0;0,<:w) do. hdr,'x must be an integer no greater than y' return. end.
+        end.
+      end.
     case. ;: '@&&.' do.  NB. conjunctions with inherited rank
       if. (e=EVLENGTH) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.  NB. check only if inherited rank
     case. ;:'I.' do.
@@ -412,11 +420,48 @@ NB. m b. domain
           end.
         end.
       end.
-NB. o. xy domain
 NB. p. xy domain
+    case. 'p.' do.
+      if. 32~:3!:0 a do.  NB. unboxed polynomial
+        if. e=EVDOMAIN do.
+          if. #emsg=. efcknumericargs a do. hdr,'x is ' , emsg return. end.  NB. must be numeric
+          if. 0=*/@$ a  do. hdr,'polynomial may not be empty' return. end.  NB. must be nonempty
+        end.
+      else.  NB. boxed: mplr/roots or multinomial
+        if. (e=EVDOMAIN) *. 0=*/@$ a  do. hdr,'polynomial may not be empty' return. end.  NB. must be nonempty
+        if. (e=EVLENGTH) *. (2<#a) do. hdr,'polynomial may have coeff and roots, nothing more' return. end.  NB. must be nonempty
+        'coeff roots' =. _2 {. 1;a  NB. Get (possibly defaulted) coeff, and roots
+        if. e=EVDOMAIN do.
+           if. #emsg=. efcknumericargs coeff do. hdr,'coeff is ' , emsg return. end.
+           if. #emsg=. efcknumericargs roots do. hdr,'roots is ' , emsg return. end.
+        end. 
+        if. e=EVRANK do.
+           if. '' -.@-: $coeff do. hdr, 'coeff must be an atom'  return. end.
+           if. 2 < #@$ roots do. hdr, 'roots/multinomial must have rank < 3'  return. end.
+        end.
+        if. 2=#@$ roots do.
+          if. (e=EVLENGTH) do.
+            if. (2>{:$roots) do. hdr,'multinomial must have at leat 1 variable' return. end.  NB. must be nonempty
+NB. must handle error in pdt here
+          end.
+        end.
+      end.
+      if. e=EVDOMAIN do. if. #emsg=. efcknumericargs w do. hdr,'y is ' , emsg return. end. end.  NB. must be numeric
 NB. p.. xy domain
-NB. p: xy domain
-NB. q: xy domain
+    case. 'p..' do.
+NB. copy from monad p.
+      if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a do. hdr,'x is ' , emsg return. end. end.  NB. must be numeric
+    case. 'p:' do.
+      if. e=EVDOMAIN do.
+        if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
+        if. '' -.@-: $a do. hdr , 'x must be an atom' return. end.
+        if. -. a e. _4 _1 0 1 2 3 4 5 6 do.  hdr , 'x must select a valid function' return. end.
+      end.
+    case. 'q:' do.
+      if. e=EVDOMAIN do.
+        if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
+        if. #emsg=. 'x has'&,^:(*@#) a efindexmsg (a) 9!:23 (0;0$0) do. hdr,emsg return. end.  NB.nonintegral value
+      end.
 NB. s: xy domain
 NB. T. xy domain
 NB. u: xy domain
