@@ -106,7 +106,13 @@ else.
     stgs =. stgs ,~ <stg =. (0 >. 0 , 0 ,~  max =. max -#stg) eflinAR {. aro1
     if. 1 < #aro1 do. stgs =. stgs , <stg =. (0 >. 0 , 1 ,~  max =. max -#stg) eflinAR {: aro1 end.
     if. (frc=0) *. *./ stgs = <'...' do. '...' return. end.
-    (')' ,~ '('&,)^:par ; stgs return. 
+    NB. string not too long; leave spaces where needed (before letter, digit or inflection)
+    NB. leading space needed before inflection always, or num/letter preceded by num/letter
+    fpad =. i.&1@:(e.&>&('.:';'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'))"0 {.@> stgs
+    NB. trailing space after num/letter
+    bpad =. i.&1@:(e.&>&('.:';'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'))"0 {:@> stgs
+    npad =. 0 (0}) 2 > fpad+|.!._1 bpad
+    (')' ,~ '('&,)^:par ; npad ((' ' #~ [) , ])&.> stgs return. 
   end.
 end.
 }}
@@ -182,7 +188,7 @@ efindexmsg_j_ =: {{
 'rc il' =. y  NB. return code and index list of error
 emsg =. ''
 select. rc
-case. 1 do. emsg =. ' nonnumeric type (' , (>efhomo 3!:0 x) , ')'
+case. 1 do. emsg =. ' nonnumeric type (' , (0{::efhomo 3!:0 x) , ')'
 case. 2 do. emsg =. ' nonintegral value (' ,(": (<il) { x) , ')' ,  (' at position ' , ":)`(''"_)@.(1=*/@$x) il
 case. 3 do. emsg =. ' invalid value (' ,(": (<il) { x) , ')' ,  (' at position ' , ":)`(''"_)@.(1=*/@$x) il
 end.
@@ -259,7 +265,7 @@ case. EVFNAME do. emsg =. 'nonexistent file or invalid filename '
 case. EVFNUM do. emsg =. 'the specified file number is not open'
 case. EVTIME do. emsg =. 'the execution time limit was exceeded'
 case. EVRO do. emsg =. 'attempt to modify a read-only mapped file'
-case. EVCTRL do. emsg =. 'the line, with its number shown in brackets, has a mismatched control structure'
+case. EVCTRL do. emsg =. 'the line, with its number in its definition shown in brackets, has a mismatched control structure'
 case. EVEMPTYT do. emsg =. 'no sentences following for. or select.'
 case. EVEMPTYDD do. emsg =. 'unfinished {{ }} definition'
 case. EVILNUM do. emsg =. 'any word beginning with a digit or _ must be a valid number'
@@ -283,17 +289,18 @@ if. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return.
 
 NB. Go through a tree to find the message code to use
 select. psself
+NB. adj/conj executions not analyzed yet
 case. 3 do.
   NB. verb. treat monad and dyad separately
   if. dyad do.
     NB. Dyads
     ivr =. }. self b. 0  NB. dyad ranks of the verb
     select. prim
-    case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!o.&."b.' do.  NB. atomic dyads and u"v
+    case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!o."j.H.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
       if. e=EVLENGTH do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.
       if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end. end.
-     case. ;: '@&&.' do.  NB. conjunctions with inherited rank
+    case. ;: '@&&.' do.  NB. conjunctions with inherited rank
       if. (e=EVLENGTH) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.  NB. check only if inherited rank
     case. ;:'I.' do.
       if. (e=EVLENGTH) do. hdr , ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w return. end.
@@ -306,29 +313,25 @@ case. 3 do.
           if. 1 < #types =. ~. types , efhomo 3!:0 fill do. emsg =. 'arguments and fill are incompatible: ' , efandlist types end.
         end.
       end.
-      hdr , emsg return.
     case. ;:'$' do.
       if. e=EVLENGTH do. emsg=.'extending an empty array requires fill'
       elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0)
-      elseif. e=EVINHOMO do. emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
+      elseif. e=EVINHOMO do. emsg =. 'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
-      hdr , emsg return.
     case. ;:'|.' do.
       if. e=EVLENGTH do. emsg=.'x has ' , ('atoms atom' efdispnsp #a) , ' but y has only ' , ('axes axis' efdispnsp #@$w)
       elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0$0)
-      elseif. e=EVINHOMO do. emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
+      elseif. e=EVINHOMO do. emsg =. 'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
-      hdr , emsg return.
     case. ;:'|:' do.
       if. e=EVLENGTH do. emsg=.'x has ' , ('atoms atom' efdispnsp #a) , ' but y has only ' , ('axes axis' efdispnsp #@$w)
       elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0$0)
       elseif. e=EVINDEXDUP do. emsg =. 'x contains a duplicate axis number'
       end.
-      hdr , emsg return.
     case. ;:';.' do.
       select. efarnounvalue 1{args
       case. 0 do.
-        if. e=EVDOMAIN do. if. #emsg=. 'x has'&,^:(*@#) a efindexmsg ('' $ a) 9!:23 (0;0$0) do. hdr,emsg return. end. end.  NB. incorrect type of x
+        if. e=EVDOMAIN do. if. #emsg=. 'x has'&,^:(*@#) a efindexmsg ('' $ a) 9!:23 (2;0$0) do. hdr,emsg return. end. end.  NB. incorrect type of x
         if. e=EVLENGTH do.
           if. 2>#$a do. a =. 0,:a end.  NB. if a has rank <2, make it a table of start/end.
           if. 2 ~: _2 { $a do. hdr , 'The 2-cells of x must have 2 rows: offsets and lengths' return. end.
@@ -358,7 +361,6 @@ case. 3 do.
           if. ({:!.1 $a) > #$w do. hdr , 'x has ' , ('columns column' efdispnsp {:!.1 $a) , ' but y has only ' , ('axes axis' efdispnsp #@$w) return. end.
         end.
       end.
-      hdr , emsg return.
     case. ;:'#' do.
       if. e=EVLENGTH do.
         if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return.  NB. agreement error outside the item
@@ -370,27 +372,46 @@ case. 3 do.
       elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (1;0)
       elseif. e=EVINHOMO do. emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
-      hdr , emsg return.
     case. ;:'#.' do.
       if. e=EVLENGTH do.
         if. #emsg=.efckagree a;w;0 0;1 1 do. hdr,emsg return. end.  NB. agreement error outside the item
       elseif. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
       end.
-      hdr , emsg return.
+    fcase. ;:'A.' do.
+      if. e=EVINDEX do. hdr , 'the anagram number must be less than !#y' return. end.
     case. ;:'#:' do.
       if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
       end.
-      hdr , emsg return.
-NB. /. /.. agreement
+    case. ;:'/./..' do.
+      if. (e=EVLENGTH) do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
 NB. { x domain and index
-NB. {. {: x domain rank fill
+    fcase. '{.{:' do.
+      if. e=EVINHOMO do. hdr ,  'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill return. end.
+    case. '}.}:' do.
+      if. e=EVLENGTH do. emsg=.'x has ' , ('atoms atom' efdispnsp #a) , ' but y has only ' , ('axes axis' efdispnsp #@$w)
+      elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (2;0$0)
+      end.
 NB. } xy homo ind domain (incl fill) and index x/ind agreement
-NB. }. }: x domain rank
 NB. m b. domain
-NB. A. x domain
-NB. C. x domain agreement
-NB. H. domain
-NB. j. xy domain
+    case. 'b.' do.
+      if. e=EVLENGTH do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.
+      if. e=EVDOMAIN do.
+        dom=.(16 <: efarnounvalue 0{args) {:: 0 1;0$0  NB. if m<16, domain is boolean, else integer
+        if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of x or nonintegral
+        if. #emsg=. 'y has'&,^:(*@#) w efindexmsg w 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of y or nonintegral
+      end.
+    case. 'C.' do.
+      if. e=EVINDEXDUP do. hdr , ('a permutation in ' #~ 1<*/}:$a) , 'x contains a duplicate value' return. end.
+      if. e e. EVDOMAIN,EVINDEX do.
+        if. 32 ~: 3!:0 a do.
+          if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;(_1&- , ]) #w) do. hdr,emsg return. end.  NB. direct form
+        else.
+          if. 1 e. , iserr =. (0~:0&{::)@> eall =. (9!:23&(0;(_1&- , ]) #w))&.> a do.
+            enx =. ($ #: i.&1@,) iserr
+            if. #emsg=. 'element (' , (":enx) , '} of x has' , ((<enx){::a) efindexmsg ((<enx){::eall) do. hdr,emsg return. end.
+          end.
+        end.
+      end.
 NB. o. xy domain
 NB. p. xy domain
 NB. p.. xy domain
@@ -434,7 +455,7 @@ NB. x: domain
     end.
   end.
 end.
-hdr return.  NB. no match
+(}:^:(0=#emsg) hdr) , emsg return.  NB. if we have a line, return it; otherwise remove LF from hdr to avoid empty line
 }}
 
 
@@ -472,7 +493,8 @@ eformat_j_ 9;'name';63 63;(5!:1<'self');a;<w [ a =.2 3 [ w=.i. 5
 eformat_j_ 6;'';63 63;(5!:1<'self');a;<w [ a =.(100,:5) [ w=.i. 10 10
 self =: #.
 eformat_j_ 9;'';63 63;(5!:1<'self');a;<w [ a =.1 2 [ w=.3 4 5
-
+self=:C.
+eformat_j_ 3;'';63 63;(5!:1<'self');a;<w [ a =.(1 2;2 2.5) [ w=.i. 6
 )
 
 
