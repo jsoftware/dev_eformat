@@ -137,10 +137,10 @@ if. 1 < #y do. y =. (}: , (<'and') , {:) y end.
 ;:^:_1 y
 }}
 
-NB. x is 2x2 positions of <>; y is ashape;w shape  result is frame message
+NB. x is 2x2 positions of <> (x< x> ,: y< y>) ; y is ashape;wshape  result is frame message
 efcarets_j_ =: {{
 bshape =. (<"1 +:x) ;@:((;:'<>')"_`[`]})&.> (a: 0 _1} (<' ') (,@,. , [) (":&.>))&.> y
-'<frames> do not conform in shapes ' , (0 {:: bshape) , ' and ' , (1 {:: bshape)  
+(0 {:: bshape) , ' and ' , (1 {:: bshape)  
 }}
 
 NB. obsolete NB. y is message;selfar;ovr ; result has the executing entity prepended
@@ -167,7 +167,7 @@ NB. obsolete   bktpos =. 0 ,. awr-or
 elseif. -. -:/ (<./ or-ir) {.&> (-or) {.&.> a ;&$ w do.  NB. inner frames too, after discarding outer frame
   NB. error in the inside frame.  highlight it.
   bktpos =. (awr-or) ,. awr-ir  NB. positions of <> chars for a/w, showing the position to put <> before.  There can be no agreement error if a frame is empty, so only one char per position is possible
-  emsg =. bktpos efcarets a ;&$ w
+  emsg =. '<frames> do not conform in shapes ' , bktpos efcarets a ;&$ w
 end.
 NB. If we found an error, prepend the failing primitive
 emsg
@@ -311,7 +311,9 @@ case. 3 do.
     case. ;: '@&&.' do.  NB. conjunctions with inherited rank
       if. (e=EVLENGTH) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.  NB. check only if inherited rank
     case. ;:'I.' do.
-      if. (e=EVLENGTH) do. hdr , ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w return. end.
+      if. e=EVRANK do. hdr,'the rank of y must be at least as large as the rank of an item of x' return. end.
+      if. e=EVLENGTH do. hdr , '<search cells> do not conform in shapes ' , ((-/ 0 ,~ 0 >. <:@{.) (a ,&(#@$) w)) efcarets a ,&<&$ w return. end.
+      if. e=EVINHOMO  do. if. 1 < #types =. a. -.~ a efhomo@:(,&(*@(#@,) * 3!:0)) w do. hdr,'arguments are incompatible: ' , efandlist types return. end. end.
     fcase. ;:',.' do.  NB. May have agreement error.  No IRS
       if. (e=EVLENGTH) do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
     case. ;:',,:' do.  NB. only error is incompatible args, but could be with fill also
@@ -393,22 +395,22 @@ case. 3 do.
     case. ;:'/./..' do.
       if. (e=EVLENGTH) do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
 NB. { x domain and index
-    fcase. '{.{:' do.
+    fcase. ;:'{.{:' do.
       if. e=EVINHOMO do. hdr ,  'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill return. end.
-    case. '}.}:' do.
+    case. ;:'}.}:' do.
       if. e=EVLENGTH do. emsg=.'x has ' , ('atoms atom' efdispnsp #a) , ' but y has only ' , ('axes axis' efdispnsp #@$w)
       elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (2;0$0)
       end.
 NB. } xy homo ind domain (incl fill) and index x/ind agreement
-NB. m b. domain
-    case. 'b.' do.
+NB. ". domain
+    case. ;:'b.' do.
       if. e=EVLENGTH do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.
       if. e=EVDOMAIN do.
         dom=.(16 <: efarnounvalue 0{args) {:: 0 1;0$0  NB. if m<16, domain is boolean, else integer
         if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of x or nonintegral
         if. #emsg=. 'y has'&,^:(*@#) w efindexmsg w 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of y or nonintegral
       end.
-    case. 'C.' do.
+    case. ;:'C.' do.
       if. e=EVINDEXDUP do. hdr , ('a permutation in ' #~ 1<*/}:$a) , 'x contains a duplicate value' return. end.
       if. e e. EVDOMAIN,EVINDEX do.
         if. 32 ~: 3!:0 a do.
@@ -420,8 +422,7 @@ NB. m b. domain
           end.
         end.
       end.
-NB. p. xy domain
-    case. 'p.' do.
+    case. ;:'p.' do.
       if. 32~:3!:0 a do.  NB. unboxed polynomial
         if. e=EVDOMAIN do.
           if. #emsg=. efcknumericargs a do. hdr,'x is ' , emsg return. end.  NB. must be numeric
@@ -447,54 +448,144 @@ NB. must handle error in pdt here
         end.
       end.
       if. e=EVDOMAIN do. if. #emsg=. efcknumericargs w do. hdr,'y is ' , emsg return. end. end.  NB. must be numeric
-NB. p.. xy domain
-    case. 'p..' do.
+    case. ;:'p..' do.
 NB. copy from monad p.
       if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a do. hdr,'x is ' , emsg return. end. end.  NB. must be numeric
-    case. 'p:' do.
+    case. ;:'p:' do.
       if. e=EVDOMAIN do.
         if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
         if. '' -.@-: $a do. hdr , 'x must be an atom' return. end.
         if. -. a e. _4 _1 0 1 2 3 4 5 6 do.  hdr , 'x must select a valid function' return. end.
       end.
-    case. 'q:' do.
+    case. ;:'q:' do.
       if. e=EVDOMAIN do.
         if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
-        if. #emsg=. 'x has'&,^:(*@#) a efindexmsg (a) 9!:23 (0;0$0) do. hdr,emsg return. end.  NB.nonintegral value
+        if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0$0) do. hdr,emsg return. end.  NB.nonintegral value
       end.
-NB. s: xy domain
-NB. T. xy domain
-NB. u: xy domain
-NB. x: xy domain
-NB. Z: fold
+    case. ;:'s:x:u:' do.
+NB. most decoding omitted
+      if. e=EVDOMAIN do. if. (~:''-:$a) +. a 9!:23 (0;0$0) do. hdr,'x must be an integer atom' return. end. end.
+    case. ;:'T.' do.
+      if. e=EVNONCE do. hdr,'your system does not support threading' return. end.
+      if. e=EVDOMAIN do. if. (~:''-:$a) +. a 9!:23 (0;0$0) do. hdr,'x must be an integer atom' return. end. end.
+      select. ''$a
+      case. 4 do. if. e=EVDOMAIN do. hdr,'y must be boxes whose status is to be tested' return. end.
+      case. 5 do.
+        if. e=EVDOMAIN do. hdr,'y must be timeout value in seconds' return. end.
+        if. e=EVLENGTH do. hdr,'y must be a numeric atom holding timeout value in seconds' return. end.
+        if. e=EVLIMIT do. hdr,'timeout must not exceed 9e9 unless infinite' return. end.
+      case. 6 do.
+        if. e e. EVDOMAIN,EVRANK,EVLENGTH do. hdr,'y must be pyx;value' return. end.
+        if. e=EVRO do. hdr,'the value of the pyx has already been set' return. end.
+      case. 7 do.
+        if. e e. EVDOMAIN,EVRANK,EVLENGTH do. hdr,'y must be pyx;atomic error code 1-255' return. end.
+        if. e=EVRO do. hdr,'the value of the pyx has already been set' return. end.
+      case. 2;15 do.
+        if. e e. EVRANK,EVLENGTH do. hdr,'y must be an integer atom or empty' return. end.
+        if. e=EVLIMIT do. hdr,'invalid thread number' return. end.
+      case. 8;1;3;55 do.
+        if. e e. EVRANK,EVLENGTH do. hdr,'y must be empty' return. end.
+      case. 14 do.
+        if. e e. EVRANK,EVLENGTH do. hdr,'y must be thread#,timeout' return. end.
+        if. e=EVDOMAIN do.
+          if. #emsg=. efcknumericargs w do. hdr,'y is ' , emsg return. end.   NB. must be numeric
+          if. (~: <.) {.w do. hdr,'thread# is nonintegral' return. end.
+          if. 0 > {:w do. hdr,'timeout is negative' return. end.
+        end.
+        if. e = EVLIMIT do. hdr,'thread# exceeds system limit' return. end.
+      case. 0 do.
+        if. e e. EVRANK,EVLENGTH do. hdr,'y must be an integer atom or empty' return. end.
+        if. e=EVLIMIT do. hdr,'too many threads for poool or system' return. end.
+        if. e=EVFACE do. hdr,'the OS refursed to create a thread' return. end.
+      case. 10;11;13;16;17;18 do.   NB. no decoding for these yet
+      case. do. hdr,'unknown x value' return.
+      end.
+    case. ;:'Z:' do.
+NB. copy from monad p.
+      if. e=EVSYNTAX do. hdr,'fold is not running' return. end.
     end.
   else.
+
     NB. Monads
     select. prim
-    case. ;:'>;' do.
-      if. (e e. EVDOMAIN , EVINHOMO) do. if. 1 < #types =. a: -.~ efhomo (,&(*@(#@,) * 3!:0)@> a do. emsg =. 'contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
-      hdr , emsg return.
-NB. |.!.f fill
-NB. #. domain
-NB. #: domain
-NB. { domain
-NB. {. {: fill
+    case. ;:'<.<:>.>:++:**:-%%:^^.|!j.H.??.' do.  NB. atomic dyads and u"v
+      NB. Primitive atomic verb.  Check for agreement
+      if. e=EVDOMAIN do.
+        if. #emsg=. efcknumericargs a  do. hdr,emsg return. end.
+        if. prim e. ;:'??.' do.
+          if. #emsg=. a efindexmsg a 9!:23 (0;1) do. hdr,'y must be a positive integer' return. end.
+        end.
+      end.
+    case. ;:'>;{' do.  NB. only error is incompatible args, but could be with fill also
+      if. (e e. EVDOMAIN , EVINHOMO) do.  NB. domain /inhomo
+        if. 1 < #types =. a. -.~ efhomo (,&(*@(#@,) * 3!:0))@> a do. emsg =. 'contents are incompatible: ' , efandlist types
+        elseif. 1=#fill do.
+          if. 1 < #types =. ~. types , efhomo 3!:0 fill do. emsg =. 'contents and fill are incompatible: ' , efandlist types end.
+        end.
+      end.
+    case. ;:'|.' do.
+      if. e=EVINHOMO do. emsg =. 'argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill end.
+    case. ;:'#.#:' do.
+      if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end. end.
+    case. ;:'{.{:' do.
+      if. e=EVINHOMO do. hdr ,  'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill return. end.
+NB. } xy homo ind domain (incl fill) and index x/ind agreement
+    case. ;:'b.' do.
+      if. e=EVDOMAIN do.
+        dom=.(16 <: efarnounvalue 0{args) {:: 0 1;0$0  NB. if m<16, domain is boolean, else integer
+        if. #emsg=. 'y has'&,^:(*@#) a efindexmsg a 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of x or nonintegral
+      end.
 NB. } x domain
-NB. ". domain
-NB. ? ?. domain
+    case. ;:'".' do.
+      if. e=EVRANK do. if. 1<#@$a do. hdr,'y must be a list of characters' return. end. end.
+      if. e=EVDOMAIN do.
+        select. 3!:0 a
+        case. 131072;262144 do. hdr,'y must be convertible to byte precision' return.
+        case. 2 do.
+        case. do. hdr,'y must be a list of characters' return.
+        end.
+      end.
+    case. ;:'??.' do.
+      if. e=EVDOMAIN do.
+        if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
+        if. #emsg=. a efindexmsg a 9!:23 (0;0) do. hdr,'y must be a nonnegative integer' return. end.
+      end.
 NB. A. domain
 NB. C. domain
-NB. H. domain
-NB. i. domain
-NB. i: domain length
-NB. I. domain
-NB. j. domain
-NB. o. domain
+    case. ;:'A.C.' do.
+      if. e=EVINDEXDUP do. hdr , ('a permutation in ' #~ 1<*/}:$a) , 'y contains a duplicate value' return. end.
+      if. e e. EVDOMAIN,EVINDEX do.
+        if. 32 ~: 3!:0 a do.
+          if. #emsg=. efcknumericargs a  do. hdr,emsg return. end.
+          permord =. <. >./ a
+          if. #emsg=. 'y has'&,^:(*@#) a efindexmsg a 9!:23 (0;(_1&- , ]) permord) do. hdr,emsg return. end.  NB. direct form
+        else.
+          if. a: +./@:~: ebox =. efcknumericargs&.> a do.
+            epos =. ($ebox) #: a: i.&1@:~: ,ebox
+            cmsg =. (' of ' ,~ 'box ' , ])^:(*@#) ":epos
+            hdr,'contents of ' , cmsg , 'permutation y is ' , (<epos){:: ebox return.
+          end.
+          permord =. <. >./ >./@> , a
+          if. 1 e. , iserr =. (0~:0&{::)@> eall =. (9!:23&(0;(_1&- , ]) permord))&.> a do.
+            enx =. ($ #: i.&1@,) iserr
+            if. #emsg=. 'cycle (' , (":enx) , '} of permutation y has' , ((<enx){::a) efindexmsg ((<enx){::eall) do. hdr,emsg return. end.
+          end.
+        end.
+      end.
+    case. ;:'i.' do.
+      if. e=EVDOMAIN do. if. #emsg=. 'y has'&,^:(*@#) a efindexmsg a 9!:23 (0;0) do. hdr,emsg return. end. end.
+    case. ;:'i:' do.
+      if. e=EVDOMAIN do.
+        if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
+        hdr,'number of steps must be a positive integer' return.
+      end.
+    case. ;:'I.' do.
+      if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end. end.  NB. complex case not decoded
 NB. p. domain
 NB. p.. domain
 NB. p: q: domain
 NB. s: domain
-NB. T. domain
+NB. t. domain
 NB. u: domain
 NB. x: domain
     end.
