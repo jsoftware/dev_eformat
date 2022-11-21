@@ -324,6 +324,10 @@ NB. Further errors are related to details of primitive execution.
 NB. NaN has only one meaning
 if. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return. end.
 
+NB. in case of length error, check rank
+if. dyad *. e=EVLENGTH do.
+ if. #emsg=.efckagree a;w;(}. self b.0);ovr do. hdr,emsg return. end. end.
+
 NB. Go through a tree to find the message code to use
 select. psself
 NB. adj/conj executions not analyzed yet
@@ -331,13 +335,11 @@ case. 3 do.
   NB. verb. treat monad and dyad separately
   if. dyad do.
     NB. Dyads
-    ivr =. }. self b. 0  NB. dyad ranks of the verb
     select. prim
     fcase. ;:'o.' do.
       if. e=EVDOMAIN do. if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;_12 12) do. hdr,emsg return. end. end.
     case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!"j.H.??.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
-      if. e=EVLENGTH do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.
       if. e=EVDOMAIN do.
         if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
         if. prim e. ;:'??.' do.
@@ -345,8 +347,6 @@ case. 3 do.
           if. #emsg=. a efindexmsg a 9!:23 (0;0,<:w) do. hdr,'x must be an integer no greater than y' return. end.
         end.
       end.
-    case. ;: '@&&.' do.  NB. conjunctions with inherited rank
-      if. (e=EVLENGTH) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.  NB. check only if inherited rank
     case. ;:'I.' do.
       if. e=EVRANK do. hdr,'the rank of y must be at least as large as the rank of an item of x' return. end.
       if. e=EVLENGTH do. hdr , '<search cells> do not conform in shapes ' , ((-/ 0 ,~ 0 >. <:@{.) (a ,&(#@$) w)) efcarets a ,&<&$ w return. end.
@@ -410,8 +410,8 @@ case. 3 do.
       end.
     case. ;:'#' do.
       if. e=EVLENGTH do.
-        if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return.  NB. agreement error outside the item
-        elseif. ({:$a) ~: (-({:ovr)<.#$w) { $w do.   NB. agreement error inside the item
+        NB. agreement error outside the item has already been handled
+        if. ({:$a) ~: (-({:ovr)<.#$w) { $w do.   NB. agreement error inside the item
           if. 1>:#$a do. xmsg =. 'x is a list of ' , ('values value' efdispnsp {:$a) else. xmsg =. 'rows of x contain ' , ('values value' efdispnsp {:$a) , ' each' end.
           if. ({:ovr)>:#$w do. ymsg =. 'y has ' , ('items item' efdispnsp {.$w) else. ymsg =. 'cells of y contain ' , ('items item' efdispnsp ({:ovr){$w) , ' each' end.
           hdr , xmsg , ' but ' , ymsg return.
@@ -441,7 +441,6 @@ NB. { x domain and index
 NB. } xy homo ind domain (incl fill) and index x/ind agreement
 NB. ". domain
     case. ;:'b.' do.
-      if. e=EVLENGTH do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.
       if. e=EVDOMAIN do.
         dom=.(16 <: efarnounvalue 0{args) {:: 0 1;0$0  NB. if m<16, domain is boolean, else integer
         if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of x or nonintegral
