@@ -321,9 +321,6 @@ end.
 
 NB. Further errors are related to details of primitive execution.
 
-NB. NaN has only one meaning
-if. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return. end.
-
 NB. in case of length error, check rank
 if. dyad *. e=EVLENGTH do.
  if. #emsg=.efckagree a;w;(}. self b.0);ovr do. hdr,emsg return. end. end.
@@ -346,6 +343,12 @@ case. 3 do.
           if. #emsg=. w efindexmsg w 9!:23 (0;1) do. hdr,'y must be a positive integer' return. end.
           if. #emsg=. a efindexmsg a 9!:23 (0;0,<:w) do. hdr,'x must be an integer no greater than y' return. end.
         end.
+      elseif. e=EVNAN do.
+        if. prim -: <,'+' do. hdr,'x and y are infinities of opposite sign' return. end.
+        if. prim -: <,'-' do. hdr,'x and y are infinities of like sign' return. end.
+        if. prim -: <,'%' do. hdr,'x and y are both infinite' return. end.
+        if. prim -: <,'|' do. hdr,'y is infinite' return. end. NB. (and x is nonzero)
+        NB. etc. ...
       end.
     case. ;:'I.' do.
       if. e=EVRANK do. hdr,'the rank of y must be at least as large as the rank of an item of x' return. end.
@@ -551,6 +554,8 @@ NB. copy from monad p.
         if. prim e. ;:'??.' do.
           if. #emsg=. a efindexmsg a 9!:23 (0;1) do. hdr,'y must be a positive integer' return. end.
         end.
+      elseif. e=EVNAN do.
+        if. prim -: <,'!' do. hdr,'!__ is not well defined' return. end.
       end.
     case. ;:'>;{' do.  NB. only error is incompatible args, but could be with fill also
       if. (e e. EVDOMAIN , EVINHOMO) do.  NB. domain /inhomo
@@ -627,6 +632,10 @@ NB. x: domain
     end.
   end.
 end.
+
+NB. not yet specifically diagnosed nan error
+if. (0=#emsg) *. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return. end.
+
 (}:^:(0=#emsg) hdr) , emsg return.  NB. if we have a line, return it; otherwise remove LF from hdr to avoid empty line
 }}
 
