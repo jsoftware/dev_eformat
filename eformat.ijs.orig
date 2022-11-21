@@ -205,6 +205,7 @@ xtype=. 'x is '&,&.> ('numeric';a:) -.~ efhomo (*@(#@,) * 3!:0) x [ ytype=. 'y i
 ;:^:_1 xtype ([ , ((<'and') #~ *&#) , ]) ytype
 }}
 
+<<<<<<< HEAD
 NB. y is polynomial in coeff, roots, or exponent form.  Result is msg, or '' if no error found
 efauditpoly_j_ =: {{
 if. 32 ~: 3!:0 y do.  NB. not boxed form - converting to roots
@@ -227,9 +228,7 @@ else.  NB. boxed form
     exps =. {:"1 exps  NB. extract the exponents
     if. e=EVDOMAIN do. if. #emsg=. 'exponent table has '&,^:(*@#) efindexmsg a 9!:23 (0;0) do. emsg return. end. end.  NB. nonnegative integral exponents
   end.
-end.
-''
-}}
+=======
 NB. y is a misspelt string
 check_spelling_j_ =: {{
 if. -. (*./@e.&(128{.a.)) y do. NB. any nonascii characters?
@@ -262,6 +261,7 @@ for_wb. yw do.
  i=. w {.@I.@E. y
  NB.todo provide suggestions (cf '"elsif." is invalid; did you mean "elseif."?') based on hamming/levenshtein/whatever distance
  'invalid inflected word ' , (quote w) , ' at offset ' , ":i return.
+>>>>>>> 3d5ecf3de4d1d37b74fe6c0822bf9c6e148e7ce1
 end.
 ''
 }}
