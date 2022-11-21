@@ -205,8 +205,42 @@ xtype=. 'x is '&,&.> ('numeric';a:) -.~ efhomo (*@(#@,) * 3!:0) x [ ytype=. 'y i
 ;:^:_1 xtype ([ , ((<'and') #~ *&#) , ]) ytype
 }}
 
+NB. y is a misspelt string
+check_spelling_j_ =: {{
+if. -. (*./@e.&(128{.a.)) y do. NB. any nonascii characters?
+ i=. y I.@:-.@e. 128{.a.
+ i=. ({.~ >:@(}. (=i.0:) >:@}:)) i NB. grab a consecutive leading sequence of illegal characters; usually, this will be utf8-encoded source, and the user will have a better idea of what we're talking about if we show them the character(s) from their source
+ s=. 's' {.~ 1~:#i
+ NB.can't pass through nonascii characters here; todo figure that out
+ 'invalid non-ascii character' , s , ('' [ ': ' , (quote i{y)) , ' (codepoint' , s , ' ' , (":3 u:i{y) , ') at offset ' , ":0{i return.
+end.
+NB. check for incorrectly inflected words
+NB. I hope I've not missed any...
+inflected=. ;:'=.=:<.<:>.>:+.+:*.*:-.-:%.%:^.^:$.$:~.~:|.|: . : :. :: ,.,:;.;:#.#:!.!:/./:\.\:[.[:].]:{.{:{::}.}:".":`:@.@:&.&.:&:?.a.a:A.b.C.e.E.f.H.i.i:I.j.L.L:M.o.p.p..p:q:r.s:S:t.T.u:u.v.x:F.F:F..F.:F:.F::assert.do.end.break.continue.else.elseif.for.if.return.select.case.fcase.throw.try.catch.catchd.catcht.while.whilst._9:_8:_7:_6:_5:_4:_3:_2:_1:_0:0:1:2:3:4:5:6:7:8:9:_:__:NB.'
+initial_letters=. 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+digits=. '0123456789'
+digitsm=. digits , '_'
+continuation_letters=. initial_letters , digitsm
+yw=. (#~ -.@e.&inflected) (#~ e.&'.:'@{:@>);:y NB.grab inflected words not in 'inflected'
+for_wb. yw do.
+ w=. >wb
+ NB.need to check for x_: for_x. goto_x. label_x. NB.anything and numbers (eg 5.)
+ if. 'NB.' -: 3{.w do. continue.
+ elseif. '_:' -: _2{.w do. NB.self-effacing reference?
+  if. (initial_letters e.~ {.w) *. continuation_letters *./@e.~ _2}.w do. continue. end.
+ elseif. '.' -: {:w do.
+  if. (digitsm e.~ {.w) *. digits *./@e.~ }.}:w do. continue. end. NB.number
+  if. ('for_' -: 4{.w) +. ('goto_' -: 5{.w) +. ('label_' -: 6{.w) do. NB.control
+   ww=. w }.~ >:w i.'_'
+   if. (initial_letters e.~ {.ww) *. continuation_letters *./@e.~ }:ww do. continue. end. end. NB.name ok
+ end.
+ i=. w {.@I.@E. y
+ NB.todo provide suggestions (cf '"elsif." is invalid; did you mean "elseif."?') based on hamming/levenshtein/whatever distance
+ 'invalid inflected word ' , (quote w) , ' at offset ' , ":i return.
+end.
+''
+}}
 
- 
 NB. y is jerr;curname;jt->ranks;AR of failing self;a[;w][;m]
 NB. if self is a verb, a/w/m are nouns; otherwise a/w are ARs
 eformat_j_ =: {{
@@ -269,7 +303,10 @@ case. EVCTRL do. emsg =. 'the line, with its number in its definition shown in b
 case. EVEMPTYT do. emsg =. 'no sentences following for. or select.'
 case. EVEMPTYDD do. emsg =. 'unfinished {{ }} definition'
 case. EVILNUM do. emsg =. 'any word beginning with a digit or _ must be a valid number'
-case. EVSPELL do. emsg =. 'words with . or : inflections must be J primitive words'
+NB.todo also perform spellchecking for top-level forms in loaded files
+case. EVSPELL do. if. selfar -: <'".' do. emsg =. check_spelling_j_ a
+                  elseif. selfar -: <,':' do. emsg=. check_spelling_j_ w 5!:0 end.
+                  if. 0-:#emsg do. emsg =. 'words with . or : inflections must be J primitive words' end.
 end.
 if. #emsg do. hdr , emsg return. end.  NB. pee
 
