@@ -188,9 +188,9 @@ efindexmsg_j_ =: {{
 'rc il' =. y  NB. return code and index list of error
 emsg =. ''
 select. rc
-case. 1 do. emsg =. ' nonnumeric type (' , (0{::efhomo 3!:0 x) , ')'
-case. 2 do. emsg =. ' nonintegral value (' ,(": (<il) { x) , ')' ,  (' at position ' , ":)`(''"_)@.(1=*/@$x) il
-case. 3 do. emsg =. ' invalid value (' ,(": (<il) { x) , ')' ,  (' at position ' , ":)`(''"_)@.(1=*/@$x) il
+case. 1 do. emsg =. 'nonnumeric type (' , (0{::efhomo 3!:0 x) , ')'
+case. 2 do. emsg =. 'nonintegral value (' ,(": (<il) { x) , ')' ,  (' at position ' , ":)`(''"_)@.(1=*/@$x) il
+case. 3 do. emsg =. 'invalid value (' ,(": (<il) { x) , ')' ,  (' at position ' , ":)`(''"_)@.(1=*/@$x) il
 end.
 emsg
 }}
@@ -205,6 +205,31 @@ xtype=. 'x is '&,&.> ('numeric';a:) -.~ efhomo (*@(#@,) * 3!:0) x [ ytype=. 'y i
 ;:^:_1 xtype ([ , ((<'and') #~ *&#) , ]) ytype
 }}
 
+NB. y is polynomial in coeff, roots, or exponent form.  Result is msg, or '' if no error found
+efauditpoly_j_ =: {{
+if. 32 ~: 3!:0 y do.  NB. not boxed form - converting to roots
+  if. e=EVDOMAIN do.
+    if. #emsg=. efcknumericargs y  do. emsg return. end.
+    if. </ |. 0 = y do. 'nonzero constant polynomial cannot be converted to roots' return. end.
+  end.
+else.  NB. boxed form
+  if. (1<#y) +. (1>:#@$>{.y) do.  NB. coeff;roots
+    if. e=EVDOMAIN do. if. (0<#@$y) *. 2~:#y do. 'boxed polynomial must be coeff;roots or <roots' end. end.
+    if. #@$y do. 'coeff roots' =. y else. roots =. >{.ay[ coeffs =. 1 end.
+    if. e=EVRANK do. if. #@$coeff do. 'coeff must be an atom' end. end.
+    if. e=EVRANK do. if. 1<#@$roots do. 'roots must be have rank < 2' end. end.
+    if. e=EVDOMAIN do. if. #emsg=. coeff efcknumericargs roots  do. 'coeff and roots must be numeric' return. end. end.  NB. complex case not decoded
+  else.  NB. exponent form - a single box containing a two-row table
+    exps =. >{.y  NB. the table
+    if. e=EVRANK do. if. 2~:#@$exps do. 'exponent form must be a boxed table' end. end.
+    if. e=EVLENGTH do. if. 2~:{:$exps do. 'exponent form must have 2 columns' end. end.
+    if. e=EVDOMAIN do. if. #emsg=. efcknumericargs exps  do. 'exponent table must be numeric' return. end. end.  NB. complex case not decoded
+    exps =. {:"1 exps  NB. extract the exponents
+    if. e=EVDOMAIN do. if. #emsg=. 'exponent table has '&,^:(*@#) efindexmsg a 9!:23 (0;0) do. emsg return. end. end.  NB. nonnegative integral exponents
+  end.
+end.
+''
+}}
 
  
 NB. y is jerr;curname;jt->ranks;AR of failing self;a[;w][;m]
@@ -297,7 +322,7 @@ case. 3 do.
     ivr =. }. self b. 0  NB. dyad ranks of the verb
     select. prim
     fcase. ;:'o.' do.
-      if. e=EVDOMAIN do. if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;_12 12) do. hdr,emsg return. end. end.
+      if. e=EVDOMAIN do. if. #emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (0;_12 12) do. hdr,emsg return. end. end.
     case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!"j.H.??.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
       if. e=EVLENGTH do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.
@@ -325,23 +350,23 @@ case. 3 do.
       end.
     case. ;:'$' do.
       if. e=EVLENGTH do. emsg=.'extending an empty array requires fill'
-      elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0)
+      elseif. e=EVDOMAIN do. emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (0;0)
       elseif. e=EVINHOMO do. emsg =. 'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
     case. ;:'|.' do.
       if. e=EVLENGTH do. emsg=.'x has ' , ('atoms atom' efdispnsp #a) , ' but y has only ' , ('axes axis' efdispnsp #@$w)
-      elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0$0)
+      elseif. e=EVDOMAIN do. emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (0;0$0)
       elseif. e=EVINHOMO do. emsg =. 'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
     case. ;:'|:' do.
       if. e=EVLENGTH do. emsg=.'x has ' , ('atoms atom' efdispnsp #a) , ' but y has only ' , ('axes axis' efdispnsp #@$w)
-      elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0$0)
+      elseif. e=EVDOMAIN do. emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (0;0$0)
       elseif. e=EVINDEXDUP do. emsg =. 'x contains a duplicate axis number'
       end.
     case. ;:';.' do.
       select. efarnounvalue 1{args
       case. 0 do.
-        if. e=EVDOMAIN do. if. #emsg=. 'x has'&,^:(*@#) a efindexmsg ('' $ a) 9!:23 (2;0$0) do. hdr,emsg return. end. end.  NB. incorrect type of x
+        if. e=EVDOMAIN do. if. #emsg=. 'x has '&,^:(*@#) a efindexmsg ('' $ a) 9!:23 (2;0$0) do. hdr,emsg return. end. end.  NB. incorrect type of x
         if. e=EVLENGTH do.
           if. 2>#$a do. a =. 0,:a end.  NB. if a has rank <2, make it a table of start/end.
           if. 2 ~: _2 { $a do. hdr , 'The 2-cells of x must have 2 rows: offsets and lengths' return. end.
@@ -357,15 +382,15 @@ case. 3 do.
       case. 1;2;_1;_2 do.
         if. e=EVDOMAIN do.
           if. ((32=3!:0) *. 0<#@,) a do.  NB. block-matrix case, ignored for the nonce 
-          elseif. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;00 1) do. hdr,emsg return.  NB. incorrect type of x
+          elseif. #emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (0;00 1) do. hdr,emsg return.  NB. incorrect type of x
           end.
         elseif. e=EVLENGTH do.
           if. a ~:&# w do. emsg =. 'x has ' , (":#a) , ' items, y has ' , (":#w) end.
         end.
       case. 3;_3 do.
         if. e=EVDOMAIN do.
-          if. #emsg=. 'x has'&,^:(*@#) a efindexmsg (a) 9!:23 (0;0$0) do. hdr,emsg return. end.  NB.nonintegral value
-          if. 1<#$a do. if. #emsg=. 'x has'&,^:(*@#) a efindexmsg (1 {."2 a) 9!:23 (0;0) do. hdr,emsg return. end. end.  NB. first row if any must be nonnegative
+          if. #emsg=. 'x has '&,^:(*@#) a efindexmsg (a) 9!:23 (0;0$0) do. hdr,emsg return. end.  NB.nonintegral value
+          if. 1<#$a do. if. #emsg=. 'x has '&,^:(*@#) a efindexmsg (1 {."2 a) 9!:23 (0;0) do. hdr,emsg return. end. end.  NB. first row if any must be nonnegative
         elseif. e=EVLENGTH do.
           if. (2=#$a) *. 2~:{:$a do. hdr , 'x must have exactly 2 rows: movement vector and shape' return. end.
           if. ({:!.1 $a) > #$w do. hdr , 'x has ' , ('columns column' efdispnsp {:!.1 $a) , ' but y has only ' , ('axes axis' efdispnsp #@$w) return. end.
@@ -379,7 +404,7 @@ case. 3 do.
           if. ({:ovr)>:#$w do. ymsg =. 'y has ' , ('items item' efdispnsp {.$w) else. ymsg =. 'cells of y contain ' , ('items item' efdispnsp ({:ovr){$w) , ' each' end.
           hdr , xmsg , ' but ' , ymsg return.
         end.
-      elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (1;0)
+      elseif. e=EVDOMAIN do. emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (1;0)
       elseif. e=EVINHOMO do. emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
     case. ;:'#.' do.
@@ -399,7 +424,7 @@ NB. { x domain and index
       if. e=EVINHOMO do. hdr ,  'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill return. end.
     case. ;:'}.}:' do.
       if. e=EVLENGTH do. emsg=.'x has ' , ('atoms atom' efdispnsp #a) , ' but y has only ' , ('axes axis' efdispnsp #@$w)
-      elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (2;0$0)
+      elseif. e=EVDOMAIN do. emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (2;0$0)
       end.
 NB. } xy homo ind domain (incl fill) and index x/ind agreement
 NB. ". domain
@@ -407,18 +432,18 @@ NB. ". domain
       if. e=EVLENGTH do. if. #emsg=.efckagree a;w;ivr;ovr do. hdr,emsg return. end. end.
       if. e=EVDOMAIN do.
         dom=.(16 <: efarnounvalue 0{args) {:: 0 1;0$0  NB. if m<16, domain is boolean, else integer
-        if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of x or nonintegral
-        if. #emsg=. 'y has'&,^:(*@#) w efindexmsg w 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of y or nonintegral
+        if. #emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of x or nonintegral
+        if. #emsg=. 'y has '&,^:(*@#) w efindexmsg w 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of y or nonintegral
       end.
     case. ;:'C.' do.
       if. e=EVINDEXDUP do. hdr , ('a permutation in ' #~ 1<*/}:$a) , 'x contains a duplicate value' return. end.
       if. e e. EVDOMAIN,EVINDEX do.
         if. 32 ~: 3!:0 a do.
-          if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;(_1&- , ]) #w) do. hdr,emsg return. end.  NB. direct form
+          if. #emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (0;(_1&- , ]) #w) do. hdr,emsg return. end.  NB. direct form
         else.
           if. 1 e. , iserr =. (0~:0&{::)@> eall =. (9!:23&(0;(_1&- , ]) #w))&.> a do.
             enx =. ($ #: i.&1@,) iserr
-            if. #emsg=. 'element (' , (":enx) , '} of x has' , ((<enx){::a) efindexmsg ((<enx){::eall) do. hdr,emsg return. end.
+            if. #emsg=. 'element (' , (":enx) , '} of x has ' , ((<enx){::a) efindexmsg ((<enx){::eall) do. hdr,emsg return. end.
           end.
         end.
       end.
@@ -449,7 +474,7 @@ NB. must handle error in pdt here
       end.
       if. e=EVDOMAIN do. if. #emsg=. efcknumericargs w do. hdr,'y is ' , emsg return. end. end.  NB. must be numeric
     case. ;:'p..' do.
-NB. copy from monad p.
+      if. #emsg=.efauditpoly w do. hdr,emsg return. end.
       if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a do. hdr,'x is ' , emsg return. end. end.  NB. must be numeric
     case. ;:'p:' do.
       if. e=EVDOMAIN do.
@@ -460,7 +485,7 @@ NB. copy from monad p.
     case. ;:'q:' do.
       if. e=EVDOMAIN do.
         if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
-        if. #emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0$0) do. hdr,emsg return. end.  NB.nonintegral value
+        if. #emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (0;0$0) do. hdr,emsg return. end.  NB.nonintegral value
       end.
     case. ;:'s:x:u:' do.
 NB. most decoding omitted
@@ -533,7 +558,7 @@ NB. } xy homo ind domain (incl fill) and index x/ind agreement
     case. ;:'b.' do.
       if. e=EVDOMAIN do.
         dom=.(16 <: efarnounvalue 0{args) {:: 0 1;0$0  NB. if m<16, domain is boolean, else integer
-        if. #emsg=. 'y has'&,^:(*@#) a efindexmsg a 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of x or nonintegral
+        if. #emsg=. 'y has '&,^:(*@#) a efindexmsg a 9!:23 (0;dom) do. hdr,emsg return. end.  NB. incorrect type of x or nonintegral
       end.
 NB. } x domain
     case. ;:'".' do.
@@ -545,7 +570,7 @@ NB. } x domain
         case. do. hdr,'y must be a list of characters' return.
         end.
       end.
-    case. ;:'??.' do.
+    case. ;:'??.p:q:' do.
       if. e=EVDOMAIN do.
         if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
         if. #emsg=. a efindexmsg a 9!:23 (0;0) do. hdr,'y must be a nonnegative integer' return. end.
@@ -558,7 +583,7 @@ NB. C. domain
         if. 32 ~: 3!:0 a do.
           if. #emsg=. efcknumericargs a  do. hdr,emsg return. end.
           permord =. <. >./ a
-          if. #emsg=. 'y has'&,^:(*@#) a efindexmsg a 9!:23 (0;(_1&- , ]) permord) do. hdr,emsg return. end.  NB. direct form
+          if. #emsg=. 'y has '&,^:(*@#) a efindexmsg a 9!:23 (0;(_1&- , ]) permord) do. hdr,emsg return. end.  NB. direct form
         else.
           if. a: +./@:~: ebox =. efcknumericargs&.> a do.
             epos =. ($ebox) #: a: i.&1@:~: ,ebox
@@ -568,26 +593,27 @@ NB. C. domain
           permord =. <. >./ >./@> , a
           if. 1 e. , iserr =. (0~:0&{::)@> eall =. (9!:23&(0;(_1&- , ]) permord))&.> a do.
             enx =. ($ #: i.&1@,) iserr
-            if. #emsg=. 'cycle (' , (":enx) , '} of permutation y has' , ((<enx){::a) efindexmsg ((<enx){::eall) do. hdr,emsg return. end.
+            if. #emsg=. 'cycle (' , (":enx) , '} of permutation y has ' , ((<enx){::a) efindexmsg ((<enx){::eall) do. hdr,emsg return. end.
           end.
         end.
       end.
     case. ;:'i.' do.
-      if. e=EVDOMAIN do. if. #emsg=. 'y has'&,^:(*@#) a efindexmsg a 9!:23 (0;0) do. hdr,emsg return. end. end.
+      if. e=EVDOMAIN do. if. #emsg=. 'y has '&,^:(*@#) a efindexmsg a 9!:23 (0;0) do. hdr,emsg return. end. end.
     case. ;:'i:' do.
       if. e=EVDOMAIN do.
-        if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
+        if. #emsg=. efcknumericargs a do. hdr,emsg return. end.
         hdr,'number of steps must be a positive integer' return.
       end.
     case. ;:'I.' do.
-      if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end. end.  NB. complex case not decoded
-NB. p. domain
-NB. p.. domain
-NB. p: q: domain
-NB. s: domain
-NB. t. domain
+      if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a  do. hdr,emsg return. end. end.  NB. complex case not decoded
+    case. ;:'p.' do.
+      if. #emsg=.efauditpoly a do. hdr,emsg return. end.
 NB. u: domain
+    case. ;:'u:' do.
+      if. e=EVINDEX do. if. -. (3!:0 a) e. 2 131072 262144 do. if. #emsg=. a efindexmsg a 9!:23 (0;_65536 65535) do. hdr,emsg end. end. end.
 NB. x: domain
+    case. ;:'x:' do.
+      if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a  do. hdr,emsg return. end. end.
     end.
   end.
 end.
