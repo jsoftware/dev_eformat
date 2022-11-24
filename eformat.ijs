@@ -352,7 +352,6 @@ if. dyad *. e=EVLENGTH do.
 
 NB. Go through a tree to find the message code to use
 select. psself
-NB. adj/conj executions not analyzed yet
 case. 3 do.
   NB. verb. treat monad and dyad separately
   if. dyad do.
@@ -570,7 +569,7 @@ NB. copy from monad p.
     end.
   else.
 
-    NB. Monads
+    NB. Monads - but the argument is called a
     select. prim
     case. ;:'<.<:>.>:++:**:-%%:^^.|!j.H.??.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
@@ -649,13 +648,21 @@ NB. C. domain
       if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a  do. hdr,emsg return. end. end.  NB. complex case not decoded
     case. ;:'p.' do.
       if. #emsg=.efauditpoly a do. hdr,emsg return. end.
-NB. u: domain
     case. ;:'u:' do.
       if. e=EVINDEX do. if. -. (3!:0 a) e. 2 131072 262144 do. if. #emsg=. a efindexmsg a 9!:23 (0;_65536 65535) do. hdr,emsg end. end. end.
-NB. x: domain
     case. ;:'x:' do.
       if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a  do. hdr,emsg return. end. end.
+    case. ;:'/' do.
+      if. e=EVDOMAIN do. if. 0=#a do. hdr,'y is empty but the verb has no identity element' return. end. end.
     end.
+  end.
+case. 2 do.
+  NB. Executing modifiers.  select cases only.  a and w are ARs
+  select. prim
+  fcase. ;:'@:&:&.&.:' do.
+    if. e=EVDOMAIN do. if. efarisnoun w do. hdr,'right argument of this modifier must be a verb' return. end. end.
+  case. ;:'@' do.
+    if. e=EVDOMAIN do. if. efarisnoun a do. hdr,'left argument of this modifier must be a verb' return. end. end.
   end.
 end.
 
