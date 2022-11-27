@@ -520,7 +520,7 @@ NB. must handle error in pdt here
         if. '' -.@-: $a do. hdr , 'x must be an atom' return. end.
         if. -. a e. _4 _1 0 1 2 3 4 5 6 do.  hdr , 'x must select a valid function' return. end.
       end.
-    case. ;:'q:' do.
+    case. ;:'q:\\.' do.
       if. e=EVDOMAIN do.
         if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
         if. #emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (0;0$0) do. hdr,emsg return. end.  NB.nonintegral value
