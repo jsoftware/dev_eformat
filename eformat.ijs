@@ -309,7 +309,7 @@ end.
 if. #emsg do. hdr1 , emsg return. end.  NB. pee
 
 if. selfar -:  {. ;:':' do. hdr =. (}:hdr1) , ', defining explicit entity' , LF
-else. hdr =. (}:hdr1) , (', executing '&,^:(*@#) ovr eflinearself selfar) , LF  NB. finish header lines
+else. hdr =. (}:hdr1) , ((', executing ',' ',~(0 2#.psself,dyad){::2 2 2 1 1#;:'noun adv conj monad dyad')&,^:(*@#) ovr eflinearself selfar) , LF  NB. finish header lines
 end.
 
 NB. Handle environment-dependent and non-execution errors
@@ -558,18 +558,33 @@ NB. most decoding omitted
         if. e = EVLIMIT do. hdr,'thread# exceeds system limit' return. end.
       case. 0 do.
         if. e e. EVRANK,EVLENGTH do. hdr,'y must be an integer atom or empty' return. end.
-        if. e=EVLIMIT do. hdr,'too many threads for poool or system' return. end.
-        if. e=EVFACE do. hdr,'the OS refursed to create a thread' return. end.
+        if. e=EVLIMIT do. hdr,'too many threads for pool or system' return. end.
+        if. e=EVFACE do. hdr,'the OS refused to create a thread' return. end.
       case. 10;11;13;16;17;18 do.   NB. no decoding for these yet
       case. do. hdr,'unknown x value' return.
       end.
     case. ;:'Z:' do.
 NB. copy from monad p.
       if. e=EVSYNTAX do. hdr,'fold is not running' return. end.
+    case. ;:'@.' do.
+      if. ism do.  NB. the errors in @. must include the selectors
+        if. e=EVRANK do. if. (#@$ind) > a >.&(#@$) w do.
+          hdr,'the rank of the selectors (' , (":#$ind) , ') must not exceed the larger argument rank (' , (":#a) , ' and ' , (":#$w) , ')' return. end.
+        end.
+        if. e=EVDOMAIN do. if. #emsg=. efcknumericargs ind do. hdr,'selector is ' , emsg return. end. end.  NB. must be numeric
+        if. e=EVLENGTH do.
+          if. #emsg=.efckagree a;ind;0 0;63 63 do. hdr,'x''s and selectors'' ',emsg return. end.
+          if. #emsg=.efckagree w;ind;0 0;63 63 do. hdr,'y''s and selectors'' ',emsg return. end.
+        end.
+        if. e=EVINDEX do.
+          ngerunds=.# efarnounvalue {. args  NB. number of gerunds
+          if. #emsg=. 'selector has '&,^:(*@#) ind efindexmsg ind 9!:23 (0;(- , <:) ngerunds) do. hdr,emsg return. end.
+        end.
+      end.
     end.
   else.
 
-    NB. Monads - but the argument is called a
+    NB. ******* Monads - but the argument is called a *******
     select. prim
     case. ;:'<.<:>.>:++:**:-%%:^^.|!j.H.??.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
@@ -654,6 +669,20 @@ NB. C. domain
       if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a  do. hdr,emsg return. end. end.
     case. ;:'/' do.
       if. e=EVDOMAIN do. if. 0=#a do. hdr,'y is empty but the verb has no identity element' return. end. end.
+    case. ;:'@.' do.
+      if. ism do.  NB. the errors in @. must include the selectors
+        if. e=EVRANK do. if. (#@$ind) > >.&(#@$) a do.
+          hdr,'the rank of the selectors (' , (":#$ind) , ') must not exceed the argument rank (' , (":#a) , ')' return. end.
+        end.
+        if. e=EVDOMAIN do. if. #emsg=. efcknumericargs ind do. hdr,'selector is ' , emsg return. end. end.  NB. must be numeric
+        if. e=EVLENGTH do.
+          if. #emsg=.efckagree a;ind;0 0;63 63 do. hdr,'y''s and selectors'' ',emsg return. end.
+        end.
+        if. e=EVINDEX do.
+          ngerunds=.# efarnounvalue {. args  NB. number of gerunds
+          if. #emsg=. 'selector has '&,^:(*@#) ind efindexmsg ind 9!:23 (0;(- , <:) ngerunds) do. hdr,emsg return. end.
+        end.
+      end.
     end.
   end.
 case. 2 do.
