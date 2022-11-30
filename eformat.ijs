@@ -664,7 +664,7 @@ NB. C. domain
     case. ;:'p.' do.
       if. #emsg=.efauditpoly a do. hdr,emsg return. end.
     case. ;:'u:' do.
-      if. e=EVINDEX do. if. -. (3!:0 a) e. 2 131072 262144 do. if. #emsg=. a efindexmsg a 9!:23 (0;_65536 65535) do. hdr,emsg end. end. end.
+      if. e=EVINDEX do. if. -. (3!:0 a) e. 2 131072 262144 do. if. #emsg=. a efindexmsg a 9!:23 (0;_65536 65535) do. hdr,emsg return. end. end. end.
     case. ;:'x:' do.
       if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a  do. hdr,emsg return. end. end.
     case. ;:'/' do.
@@ -688,10 +688,17 @@ NB. C. domain
 case. 2 do.
   NB. Executing modifiers.  select cases only.  a and w are ARs
   select. prim
-  fcase. ;:'@:&:&.&.:' do.
+  fcase. ;:'@:&:&.&.: :. F.F..F.:F:F:.F::' do.
     if. e=EVDOMAIN do. if. efarisnoun w do. hdr,'right argument of this modifier must be a verb' return. end. end.
-  case. ;:'@' do.
+  case. ;:'@ ::' do.
     if. e=EVDOMAIN do. if. efarisnoun a do. hdr,'left argument of this modifier must be a verb' return. end. end.
+  case. ;:'L:' do.
+    if. e=EVDOMAIN do. if. efarisnoun a do. hdr,'left argument of this modifier must be a verb' return. end. end.
+    if. e=EVDOMAIN do.
+      if. -. efarisnoun w do. hdr,'right argument of this modifier must be a noun' return. 
+      elseif. #emsg=. a efindexmsg a 9!:23 (0;0$0) do. hdr,'level number ',emsg return.
+      end.
+    end.
   end.
 end.
 
@@ -701,44 +708,6 @@ if. (0=#emsg) *. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or
 (}:^:(0=#emsg) hdr) , emsg return.  NB. if we have a line, return it; otherwise remove LF from hdr to avoid empty line
 }}
 
-
-1: 0 : 0
-self=.+
-eformat_j_ 9;'name';63 63;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
-eformat_j_ 9;1 63;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
-eformat_j_ 9;1 2;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
-eformat_j_ 9;1 2;(5!:1<'self');a;<w [ a =. i. 1 2 [ w =. i. 1 2 4   NB. no error
-eformat_j_ 9;1 1;(5!:1<'self');a;<w [ a =. i. 1 2 [ w =. i. 1 2 4
-eformat_j_ 9;63 63;(5!:1<'self');a;<w [ a =. 2 3 [ w =. 4 5 6
-eflinearself_j_ 5!:1<'self'
-self=.+&5
-eflinearself_j_ 5!:1<'self'
-self=.+&(i. 2 2)
-eflinearself_j_ 5!:1<'self'
-self=.+&1x
-eflinearself_j_ 5!:1<'self'
-self=.(+/ # *)
-eflinearself_j_ 5!:1<'self'
-self=.tolower
-eflinearself_j_ 5!:1<'self'
-self=.(tolower@tolower tolower tolower@tolower)
-eflinearself_j_ 5!:1<'self'
-self =. >
-eformat_j_ 3;63 63;(5!:1<'self');<a [ a =. 1;'1'
-self =. ,
-eformat_j_ 3;63 63;(5!:1<'self');a;<w [ a =. 1 [ w=.'1'
-self =. ,:!.'a'
-eformat_j_ 3;63 63;(5!:1<'self');a;<w [ a =. (,2) [ w=.2 3
-self=:[:
-eformat_j_ 37;63 63;(5!:1<'self');a;<w [ a =. (,2) [ w=.2 3
-self=:#
-eformat_j_ 9;'name';63 63;(5!:1<'self');a;<w [ a =.2 3 [ w=.i. 5
-eformat_j_ 6;'';63 63;(5!:1<'self');a;<w [ a =.(100,:5) [ w=.i. 10 10
-self =: #.
-eformat_j_ 9;'';63 63;(5!:1<'self');a;<w [ a =.1 2 [ w=.3 4 5
-self=:C.
-eformat_j_ 3;'';63 63;(5!:1<'self');a;<w [ a =.(1 2;2 2.5) [ w=.i. 6
-)
 
 
 
