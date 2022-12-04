@@ -238,8 +238,9 @@ efindexaudit_j_ =: {{
  ($x),rs
 }}
 
-NB. y is a result from efindexaudit; x is $y
+NB. y is a result from efindexaudit; x is $y; m is (printed string for x;printed string for y)
 effrommsg_j_ =: {{
+ 'xstg ystg'=. m
  'rc aeo path'=. y
  'axis excl off'=. aeo
  axismsg=. ''
@@ -251,13 +252,13 @@ effrommsg_j_ =: {{
  parts=. ((1=#path) {:: ('index list';'index'));(excl {:: 'selector';'exclusion list');'atom'
  pathmsg=. path (] , (1<#x) # ' at position ' ,^:(*@#@]) ":@[)&.> (parts {.~ #path)
  pathmsg=. pathmsg #~ (0 1 0{.~#path) +. (0~:#)&>path NB.always print 'selector'/'exclusion list'; others are optional
- if. #pathmsg do. pathmsg=. >([ , ' in ' , ])&.>/ |.pathmsg else. pathmsg=. 'x' end.
+ if. #pathmsg do. pathmsg=. >([ , ' in ' , ])&.>/ |.pathmsg else. pathmsg=. xstg end.
  emsg=. ''
  select. rc
  case. _4 do. emsg=. pathmsg , ' contains too many exclusion lists (must have rank 0)'
  case. _3 do. emsg=. pathmsg , ' is overly boxed'
  case. _2 do. emsg=. pathmsg , ' must have rank 1'
- case. _1 do. emsg=. pathmsg , ' is overlong; has length ' , (":off) , ' but y''s rank is only ' , ":#x
+ case. _1 do. emsg=. pathmsg , ' is overlong; has length ' , (":off) , ' but rank of ' , ystg , ' is only ' , ":#x
  case.  1 do. emsg=. pathmsg , ' is not a number'
  case.  2 do. emsg=. pathmsg , ' is ' , (":off) , '; not an integer'
  case.  3 do. emsg=. pathmsg , ' is ' , (":off) , '; too long for ' , axismsg , 'y, whose length is only ' , ":axislen
@@ -542,7 +543,7 @@ case. 3 do.
     case. ;:'/./..' do.
       if. e=EVLENGTH do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
     case. ;:'{' do.
-      if. e e. EVINDEX,EVLENGTH,EVDOMAIN do. if. L. rc=. a efindexaudit $w do. emsg=. ($w) effrommsg rc end. end.
+      if. e e. EVINDEX,EVLENGTH,EVDOMAIN do. if. L. rc=. a efindexaudit $w do. emsg=. ($w) ('x';'y') effrommsg rc end. end.
     fcase. ;:'{.{:' do.
       if. e=EVINHOMO do. hdr ,  'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill return. end.
     case. ;:'}.}:' do.
@@ -550,6 +551,30 @@ case. 3 do.
       elseif. e=EVDOMAIN do. emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (2;0$0)
       end.
     case. ;:'}' do.
+      if. ism do.  NB. If we didn't capture ind, we can do nothing
+        if. e=EVINHOMO do. if. 1 < #types =. a. -.~ a efhomo@:(,&(*@(#@,) * 3!:0)) w do. hdr,'arguments are incompatible: ' , efandlist types return. end. end.
+        NB. get the shape of the selected region (or index error)
+        selshape =. ''
+        if. 32 ~: 3!:0 ind do.  NB. unboxed selectors
+          select. #$ind
+          case. 0;1 do. selshape =. <ind efindexaudit $w
+          case. 2 do. NB. todo: scatter modify
+          case. do. if. e e. EVRANK,EVLENGTH do. hdr,'rank of selector must be < 3' return. end.
+          end.
+        else.  NB. boxed selectors
+          selshape =. <@(efindexaudit&($w))"0 ind   NB. one result per box
+        end.
+        if. e e. EVINDEX,EVLENGTH,EVDOMAIN do.  NB. index-type error -  see if any index box had an error
+          if. 1 (< L.) selshape do.  NB. there is an index-type error
+            errbox =.  1 i.~ 0 ~: L.@> ,selshape
+            hdr,((1 < #@, selshape) # 'in box ' , (":errbox) , ' of m, ') , ($w) ('m';'y') effrommsg errbox {:: ,selshape return.
+          end.
+        end.
+        cellshapes =. ,selshape  NB. all the selections
+        if. -. *./ (-:"_1 _  {.) cellshapes do. if. e=EVDOMAIN do. hdr,'the boxes of m must specify regions of the same shape' return. end. end.
+        cellshapes =. (# , }.@>@{.) cellshapes  NB. shape of the selected region
+        if. -. ($a) ([ -: -@#@[ {.!._1 ]) cellshapes do. if. e=EVRANK do. hdr,'the shape of x (' , (":$a) ,') must be a suffix of the shape of the selection (' , (":cellshapes) , ')' return. end. end.
+      end.
 NB. } xy homo ind domain (incl fill) and index x/ind agreement
 NB. ". domain
     case. ;:'b.' do.
