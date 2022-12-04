@@ -249,7 +249,7 @@ effrommsg_j_ =: {{
  NB. generate a message like 'atom at position xx in exclusion list at position xx in ...
  NB. match successive elements of path with successive elements of parts, and remove the elements referring to empty paths
  parts=. ((1=#path) {:: ('index list';'index'));(excl {:: 'selector';'exclusion list');'atom'
- pathmsg=. path (] , ((' at position ';''){::~0=#@[) , ":@[)&.> (parts {.~ #path)
+ pathmsg=. path (] , (1<#x) # ' at position ' ,^:(*@#@]) ":@[)&.> (parts {.~ #path)
  pathmsg=. pathmsg #~ (0 1 0{.~#path) +. (0~:#)&>path NB.always print 'selector'/'exclusion list'; others are optional
  if. #pathmsg do. pathmsg=. >([ , ' in ' , ])&.>/ |.pathmsg else. pathmsg=. 'x' end.
  emsg=. ''
@@ -443,7 +443,7 @@ case. 3 do.
     fcase. ;:'o.' do.
       if. e=EVDOMAIN do. if. #emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (0;_12 12) do. hdr,emsg return. end. end.
     case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!"j.H.??.' do.  NB. atomic dyads and u"v
-      NB. Primitive atomic verb.  Check for agreement
+      NB. Primitive atomic verb.
       if. e=EVDOMAIN do.
         if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
         if. prim e. ;:'??.' do.
@@ -541,7 +541,6 @@ case. 3 do.
       end.
     case. ;:'/./..' do.
       if. e=EVLENGTH do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
-NB. { x domain and index
     case. ;:'{' do.
       if. e e. EVINDEX,EVLENGTH,EVDOMAIN do. if. L. rc=. a efindexaudit $w do. emsg=. ($w) effrommsg rc end. end.
     fcase. ;:'{.{:' do.
@@ -550,6 +549,7 @@ NB. { x domain and index
       if. e=EVLENGTH do. emsg=.'x has ' , ('atoms atom' efdispnsp #a) , ' but y has only ' , ('axes axis' efdispnsp #@$w)
       elseif. e=EVDOMAIN do. emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (2;0$0)
       end.
+    case. ;:'}' do.
 NB. } xy homo ind domain (incl fill) and index x/ind agreement
 NB. ". domain
     case. ;:'b.' do.
@@ -649,7 +649,6 @@ NB. most decoding omitted
       case. do. hdr,'unknown x value' return.
       end.
     case. ;:'Z:' do.
-NB. copy from monad p.
       if. e=EVSYNTAX do. hdr,'fold is not running' return. end.
     case. ;:'@.' do.
       if. ism do.  NB. the errors in @. must include the selectors
@@ -715,8 +714,6 @@ NB. } x domain
         if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
         if. #emsg=. a efindexmsg a 9!:23 (0;0) do. hdr,'y must be a nonnegative integer' return. end.
       end.
-NB. A. domain
-NB. C. domain
     case. ;:'A.C.' do.
       if. e=EVINDEXDUP do. hdr , ('a permutation in ' #~ 1<*/}:$a) , 'y contains a duplicate value' return. end.
       if. e e. EVDOMAIN,EVINDEX do.
