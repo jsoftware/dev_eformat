@@ -557,8 +557,21 @@ case. 3 do.
         selshape =. ''
         if. 32 ~: 3!:0 ind do.  NB. unboxed selectors
           select. #$ind
-          case. 0;1 do. selshape =. <ind efindexaudit $w
+          case. 0;1 do.
+            selshape =. <ind efindexaudit $w
           case. 2 do. NB. todo: scatter modify
+            if. e=EVDOMAIN do. if. #emsg=. efcknumericargs ind  do. hdr,'m is ',emsg return. end.  end.
+            if. e=EVLENGTH do. if. ({:$ind) > #@$w do. hdr,'the 1-cells of m have length ' , (":{:$ind) , ', but the rank of y is only ' , ":#@$w return. end. end.
+            if. e e. EVDOMAIN,EVINDEX do. if. #emsg=. 'm has '&,^:(*@#) ind efindexmsg ind 9!:23 (0;'') do. hdr,emsg return. end. end.  NB. nonintegral index
+            if. e=EVINDEX do.
+              erow =. 1 i.~ ind +./@((< -) +. >:)"1 $w  NB. row containing error
+              if. erow < #ind do.
+                ecol =. 1 i.~ (erow { ind) ((< -) +. >:) $w  NB. column containing error
+                hdr,'position (' , (":erow,ecol) , ') of m has the value ' , (":(<erow,ecol) { ind) , ', but the length of axis ' , (":ecol) , ' of y is only ' , (":ecol{$w) return.
+              end.
+            end.
+            NB. selectors must be valid here
+            selshape =. <(#ind) , (#@$ind) }. $w  NB. each row of ind selects a cell of w
           case. do. if. e e. EVRANK,EVLENGTH do. hdr,'rank of selector must be < 3' return. end.
           end.
         else.  NB. boxed selectors
@@ -575,7 +588,6 @@ case. 3 do.
         cellshapes =. (# , }.@>@{.) cellshapes  NB. shape of the selected region
         if. -. ($a) ([ -: -@#@[ {.!._1 ]) cellshapes do. if. e=EVRANK do. hdr,'the shape of x (' , (":$a) ,') must be a suffix of the shape of the selection (' , (":cellshapes) , ')' return. end. end.
       end.
-NB. } xy homo ind domain (incl fill) and index x/ind agreement
 NB. ". domain
     case. ;:'b.' do.
       if. e=EVDOMAIN do.
