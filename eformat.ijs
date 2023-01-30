@@ -68,6 +68,7 @@ EVINHOMO
 EVINDEXDUP
 EVEMPTYT
 EVEMPTYDD
+EVMISSINGGMP
 )
 
 NB.x is (1 if all of main name always needed),(max # characters allowed),(par); y is AR
@@ -418,6 +419,7 @@ NB.todo also perform spellchecking for top-level forms in loaded files
 case. EVSPELL do. if. selfar -: <'".' do. emsg =. check_spelling_j_ a
                   elseif. selfar -: <,':' do. emsg=. check_spelling_j_ w 5!:0 end.
                   if. 0-:#emsg do. emsg =. 'words with . or : inflections must be J primitive words' end.
+case. EVMISSINGGMP do. emsg =. 'extended-precision library not found.  Run  install ''gmp''''
 end.
 if. #emsg do. hdr , emsg return. end.  NB. pee
 
@@ -822,8 +824,9 @@ case. 2 do.
   end.
 end.
 
-NB. not yet specifically diagnosed nan error
+NB. not yet specifically diagnosed nan or nonce error
 if. (0=#emsg) *. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return. end.
+if. (0=#emsg) *. e=EVNONCE do. hdr , 'this computation is not yet supported' return. end.
 
 (}:^:(0=#emsg) hdr) , emsg return.  NB. if we have a line, return it; otherwise remove LF from hdr to avoid empty line
 }}
