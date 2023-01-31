@@ -419,7 +419,7 @@ NB.todo also perform spellchecking for top-level forms in loaded files
 case. EVSPELL do. if. selfar -: <'".' do. emsg =. check_spelling_j_ a
                   elseif. selfar -: <,':' do. emsg=. check_spelling_j_ w 5!:0 end.
                   if. 0-:#emsg do. emsg =. 'words with . or : inflections must be J primitive words' end.
-case. EVMISSINGGMP do. emsg =. 'extended-precision library not found.  Run  install ''gmp''''
+case. EVMISSINGGMP do. emsg =. 'extended-precision library not found.  Run  install ''gmp''  or refer to your installation instructions'
 end.
 if. #emsg do. hdr , emsg return. end.  NB. pee
 

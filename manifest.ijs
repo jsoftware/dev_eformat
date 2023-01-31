@@ -6,7 +6,7 @@ DESCRIPTION=: 0 : 0
 message-format code, called from jtjeformat
 )
 
-VERSION=: '1.0.22'
+VERSION=: '1.0.23'
 
 FILES=: 0 : 0
 eformat.ijs
