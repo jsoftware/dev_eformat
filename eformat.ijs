@@ -429,7 +429,7 @@ case. EVTIME do. emsg =. 'the execution time limit was exceeded'
 case. EVRO do. emsg =. 'attempt to modify a read-only mapped file'
 case. EVCTRL do. emsg =. 'the line, with its number in its definition shown in brackets, has a mismatched control structure'
 case. EVEMPTYT do. emsg =. 'no sentences following for. or select.'
-case. EVEMPTYDD do. emsg =. 'empty or unfinished {{ }} definition'
+case. EVEMPTYDD do. emsg =. 'unstarted or unfinished {{ }} definition'
 case. EVILNUM do. emsg =. 'any word beginning with a digit or _ must be a valid number'
 NB.todo also perform spellchecking for top-level forms in loaded files
 case. EVSPELL do. if. selfar -: <'".' do. emsg =. check_spelling_j_ a
