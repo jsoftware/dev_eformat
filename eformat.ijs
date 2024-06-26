@@ -76,7 +76,7 @@ EVOFLO
 )
 
 NB. x and y are strings to be joined.  We insert a space if not doing so would change the words
-efjoinstgs_j_ =: (([,' ',]) [^:(-.@-:&;:) (,))
+efjoinstgs_j_ =: ([,' ',]) [^:(-.@-:&(;: ::(a:"_))) ,
 NB.x is (1 if all of main name always needed),(max # characters allowed),(par),(use gerund if possible); y is AR
 NB. par is:0=no parens needed; 1=parens needed for train but not AC exec; parens needed for train and AC
 NB. result is string to display, or ... if string too long
