@@ -73,6 +73,7 @@ EVSIDAMAGE
 EVDEADLOCK
 EVASSEMBLY
 EVOFLO
+EVTYPECHG
 )
 
 NB. x and y are strings to be joined.  We insert a space if not doing so would change the words
@@ -440,7 +441,7 @@ case. EVSPELL do. if. selfar -: <'".' do. emsg =. check_spelling_j_ a
                   elseif. selfar -: <,':' do. emsg=. check_spelling_j_ w 5!:0 end.
                   if. 0-:#emsg do. emsg =. 'words with . or : inflections must be J primitive words' end.
 case. EVMISSINGGMP do. emsg =. 'extended-precision library not found.  Run  install ''gmp''  or refer to your installation instructions'
-case. EVSIDAMAGE do. if. prim -.@-: ;:'T.' do. emsg =. 'you must turn debugging off before you redefine an entity other than the one at the top of the execution stack' end.
+case. EVSIDAMAGE do. if. prim -.@-: ;:'T.' do. emsg =. 'you must turn debugging off before you redefine an entity other than the one at the top of the execution stack' end.  NB. obsolete 
 case. EVDEADLOCK do. emsg =. 'this action would deadlock the system'
 end.
 if. #emsg do. hdr , emsg return. end.  NB. pee
@@ -864,6 +865,7 @@ NB. not yet specifically diagnosed error
 if. (0=#emsg) *. e=EVOFLO do. hdr , 'an operation on fixed-size integers does not fit in that size' return. end.
 if. (0=#emsg) *. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return. end.
 if. (0=#emsg) *. e=EVNONCE do. hdr , 'this computation is not yet supported' return. end.
+if. (0=#emsg) *. e=EVTYPECHG do. hdr , 'a name changed part of speech since definition, usually because an undefined name was taken to be a verb' return. end.
 (}:^:(0=#emsg) hdr) , emsg return.  NB. if we have a line, return it; otherwise remove LF from hdr to avoid empty line
 }}
 
