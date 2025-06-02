@@ -450,7 +450,8 @@ NB. Take valence error without further ado
 if. (e=EVVALENCE) do.
   if. selfar -: {. ;:'[:' do. hdr1 , '[: must be part of a capped fork' return.
   else.
-    if.  isexplicit do. hdr1 , 'explicit definition has no ',(dyad{::'monad';'dyad'),'ic valence' return. end.  NB. could be {{ or m : and we can't distinguish
+    if. 'defining explicit entity' ([ -: #@[ {. ]) hdr1 do. hdr1 , 'modifier may have only one valence unless it refers to x or y' return. end.
+    if. isexplicit do. hdr1 , 'explicit definition has no ',(dyad{::'monad';'dyad'),'ic valence' return. end.  NB. could be {{ or m : and we can't distinguish
     hdr ,  ('verb has no ',(dyad{::'monad';'dyad'),'ic valence') return.
   end.
 end.
